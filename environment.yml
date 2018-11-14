@@ -1,7 +1,0 @@
-name: scikit-sacred
-channels:
-- defaults
-dependencies:
-- scikit-learn>=0.19.1
-- pip:
-  - sacred>=0.7.4
