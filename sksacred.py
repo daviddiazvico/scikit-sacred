@@ -5,11 +5,10 @@
 
 import pickle
 from sacred import Experiment, Ingredient
-from sklearn.model_selection import BaseCrossValidator, cross_val_score
 import tempfile
 
 
-def _score(fetch_dataset, initialize_estimator, persist):
+def _score(fetch_dataset, initialize_estimator, persist, cross_val_score):
     """Score an estimator."""
     X, y, X_test, y_test, inner_cv, outer_cv = fetch_dataset()
     estimator = initialize_estimator(X=X, y=y, cv=inner_cv)
@@ -18,20 +17,22 @@ def _score(fetch_dataset, initialize_estimator, persist):
         estimator.fit(X, y)
         info['score'] = estimator.score(X_test, y_test)
     else:
-        if isinstance(inner_cv, BaseCrossValidator) or hasattr(inner_cv, '__iter__'):
-            estimator.fit(X, y)
-            info['score'] = cross_val_score(estimator.best_estimator_, X, y, cv=outer_cv)
-        else:
+        if (inner_cv is None) or isinstance(inner_cv, int):
             info['score'] = cross_val_score(estimator, X, y, cv=outer_cv)
+        else:
+            estimator.fit(X, y)
+            info['score'] = cross_val_score(estimator.best_estimator_, X, y,
+                                            cv=outer_cv)
         if persist:
             estimator.fit(X, y)
-    for attr in ['cv_results_', 'best_score_', 'best_params_', 'best_index_', 'n_splits_']:
+    for attr in ['cv_results_', 'best_score_', 'best_params_', 'best_index_',
+                 'n_splits_']:
         if hasattr(estimator, attr):
             info[attr] = estimator.__dict__[attr]
     return estimator, info
 
 
-def sklearn_experiment(fetch_dataset, initialize_estimator):
+def sklearn_experiment(fetch_dataset, initialize_estimator, cross_val_score):
     """Prepare a Scikit-learn experiment as a Sacred experiment.
 
     Prepare a Scikit-learn experiment indicating a dataset and an estimator and
@@ -47,6 +48,10 @@ def sklearn_experiment(fetch_dataset, initialize_estimator):
         Estimator initialization function. Might receive at least X, y and cv,
         all of which can be None, and any other argument. Must return an
         initialized sklearn-compatible estimator.
+    cross_val_score : function
+        Function to perform cross-validation scoring on the estimator. Must
+        receive the estimator, X, y and cv (migth be None). Must return the CV
+        score.
 
     Returns
     -------
@@ -78,7 +83,8 @@ def sklearn_experiment(fetch_dataset, initialize_estimator):
             Experiment info.
 
         """
-        estimator, info = _score(fetch_dataset, initialize_estimator, persist)
+        estimator, info = _score(fetch_dataset, initialize_estimator, persist,
+                                 cross_val_score)
         experiment.info.update(info)
         if persist:
             handler = tempfile.NamedTemporaryFile('wb')

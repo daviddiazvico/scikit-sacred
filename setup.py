@@ -22,6 +22,6 @@ setup(name='scikit-sacred',
                    'Programming Language :: Python :: 3',
                    'Programming Language :: Python :: 3.6',
                    'Programming Language :: Python :: 3.7'],
-      install_requires=['sacred', 'scikit-learn'],
+      install_requires=['sacred'],
       setup_requires=['pytest-runner'],
-      tests_require=['coverage', 'pytest', 'pytest-cov'])
+      tests_require=['scikit-learn', 'coverage', 'pytest', 'pytest-cov'])

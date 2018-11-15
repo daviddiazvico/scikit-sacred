@@ -7,8 +7,8 @@ import numpy as np
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, make_scorer
-from sklearn.model_selection import (GridSearchCV, StratifiedKFold,
-                                     train_test_split)
+from sklearn.model_selection import (cross_val_score, GridSearchCV,
+                                     StratifiedKFold, train_test_split)
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -27,20 +27,20 @@ def fetch_dataset(dataset):
 
 
 def initialize_estimator(predictor, X=None, y=None, cv=None):
-    estimator = {'LogisticRegression': GridSearchCV(Pipeline([('scaler', StandardScaler()),
-                                                              ('classifier', LogisticRegression(solver='lbfgs',
-                                                                                                multi_class='auto'))]),
-                                                    {'classifier__C': np.logspace(10, -30, num=8, base=2.0)},
-                                                    scoring=make_scorer(accuracy_score),
-                                                    iid=True, cv=cv,
-                                                    error_score=np.nan)}
+    estimator = {'lr': GridSearchCV(Pipeline([('tr', StandardScaler()),
+                                              ('cls', LogisticRegression(solver='lbfgs',
+                                                                         multi_class='auto'))]),
+                                    {'cls__C': np.logspace(10, -30, num=8, base=2.0)},
+                                    scoring=make_scorer(accuracy_score),
+                                    iid=True, cv=cv, error_score=np.nan)}
     return estimator[predictor]
 
 
 def test_sklearn_experiment():
     """Tests sklearn_experiment."""
-    experiment = sklearn_experiment(fetch_dataset, initialize_estimator)
+    experiment = sklearn_experiment(fetch_dataset, initialize_estimator,
+                                    cross_val_score)
     for dataset in ('', 'validation', 'test'):
         experiment.run(config_updates={'dataset': {'dataset': dataset},
-                                       'estimator': {'predictor': 'LogisticRegression'},
+                                       'estimator': {'predictor': 'lr'},
                                        'persist': True})
