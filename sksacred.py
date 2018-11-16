@@ -67,14 +67,14 @@ def sklearn_experiment(fetch_dataset, initialize_estimator, cross_val_score):
     experiment = Experiment(ingredients=[dataset, estimator])
 
     @experiment.automain
-    def run(persist=False):
+    def run(persist=True):
         """Run the experiment.
 
         Run the experiment.
 
         Parameters
         ----------
-        persist : boolean, default=False
+        persist : boolean, default=True
             Flag indicating if the trained estimator should be saved to file.
 
         Returns
