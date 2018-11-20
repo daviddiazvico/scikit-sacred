@@ -44,11 +44,38 @@ def experiment(dataset, estimator, cross_validate):
     experiment = Experiment(ingredients=(_dataset, _estimator, _cross_validate))
 
     @experiment.automain
-    def run():
-        """Run the experiment."""
+    def run(return_estimator=False):
+        """Run the experiment.
+
+        Run the experiment.
+
+        Parameters
+        ----------
+        return_estimator : boolean, default False
+            Whether to return the estimator or estimators fitted.
+
+        """
         data = dataset()
         e = estimator(X=data.data, y=data.target, cv=data.inner_cv)
-        scores = cross_validate(e, data.data, y=data.target, cv=data.outer_cv)
+        if data.data_test is not None:
+            e.fit(data.data, y=data.target)
+            scores = {'test_score': e.score(data.data_test, y=data.target_test)}
+            if return_estimator:
+                scores['estimator'] = e
+        else:
+            if hasattr(data.outer_cv, '__iter__'):
+                scores = {'test_score': []}
+                estimators = []
+                for X, y, X_test, y_test in data.outer_cv:
+                    e.fit(X, y=y)
+                    estimators.append(e)
+                    scores['test_score'].append(e.score(X_test, y=y_test))
+                if return_estimator:
+                    scores['estimator'] = estimators
+            else:
+                scores = cross_validate(e, data.data, y=data.target,
+                                        cv=data.outer_cv,
+                                        return_estimator=return_estimator)
         experiment.info.update(scores)
 
     return experiment
