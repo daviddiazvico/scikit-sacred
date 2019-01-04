@@ -44,7 +44,7 @@ def experiment(dataset, estimator, cross_validate):
     experiment = Experiment(ingredients=(_dataset, _estimator, _cross_validate))
 
     @experiment.automain
-    def run(return_estimator=False):
+    def run(return_estimator=False, best_estimator='best_estimator_'):
         """Run the experiment.
 
         Run the experiment.
@@ -53,11 +53,20 @@ def experiment(dataset, estimator, cross_validate):
         ----------
         return_estimator : boolean, default False
             Whether to return the estimator or estimators fitted.
+        best_estimator : string, default 'best_estimator_'
+            Name of the hyper-parameter search attribute that contains the best
+            estimator.
 
         """
         data = dataset()
+        if not hasattr(data, 'target'):
+            data.target = None
+        if not hasattr(data, 'inner_cv'):
+            data.inner_cv = None
         e = estimator(X=data.data, y=data.target, cv=data.inner_cv)
         if data.data_test is not None:
+            if not hasattr(data, 'target_test'):
+                data.target_test = None
             e.fit(data.data, y=data.target)
             scores = {'test_score': e.score(data.data_test, y=data.target_test)}
             if return_estimator:
