@@ -53,9 +53,6 @@ def experiment(dataset, estimator, cross_validate):
         ----------
         return_estimator : boolean, default False
             Whether to return the estimator or estimators fitted.
-        best_estimator : string, default 'best_estimator_'
-            Name of the hyper-parameter search attribute that contains the best
-            estimator.
 
         """
         data = dataset()
@@ -77,7 +74,8 @@ def experiment(dataset, estimator, cross_validate):
                 estimators = []
                 for X, y, X_test, y_test in data.outer_cv:
                     e.fit(X, y=y)
-                    estimators.append(e)
+                    if return_estimator:
+                        estimators.append(e)
                     scores['test_score'].append(e.score(X_test, y=y_test))
                 if return_estimator:
                     scores['estimator'] = estimators
