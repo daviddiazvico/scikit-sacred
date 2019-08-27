@@ -1,3 +1,5 @@
+***WARNING: This project is discontinued, and it's functionality has been included in the utils submodule of [scikit-datasets](https://github.com/daviddiazvico/scikit-datasets).***
+
 # scikit-sacred
 Scikit-learn-compatible Sacred Experiments
 
